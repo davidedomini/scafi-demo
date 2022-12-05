@@ -1,0 +1,8 @@
+.DS_Store
+.idea/
+.bsp/
+build/
+out/
+target/
+project/boot/
+project/plugins/project/
