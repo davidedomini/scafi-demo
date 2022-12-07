@@ -118,6 +118,9 @@ class Main12 extends AggregateProgramSkeleton {
 }
 object Demo12 extends Simulation[Main12]
 
+/** Counts the number of neighbors for each device, attention: we are using foldhoodPlus! It will exclude the device
+  * itself from the count
+  */
 class Main13 extends AggregateProgramSkeleton {
   override def main() = foldhoodPlus(0)(_ + _)(nbr(1))
 }
@@ -139,3 +142,10 @@ class Main16 extends AggregateProgramSkeleton {
   override def main() = rep(Double.MaxValue)(d => mux[Double](sense1)(0.0)(minHoodPlus(nbr(d) + nbrRange)))
 }
 object Demo16 extends Simulation[Main16]
+
+/** The percentage of neighbors that sense a true value */
+class Main17 extends AggregateProgramSkeleton {
+  override def main() =
+    foldhoodPlus(0)(_ + _)(nbr(boolToInt(sense1))).toDouble / foldhoodPlus(0)(_ + _)(nbr(1))
+}
+object Demo17 extends Simulation[Main17]
