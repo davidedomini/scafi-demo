@@ -133,8 +133,11 @@ class Main14 extends AggregateProgramSkeleton {
 }
 object Demo14 extends Simulation[Main14]
 
+/** Mux is a sort of if with strictly evaluation (both the branch will be evaluated for sure). It computes the gradient
+  */
 class Main15 extends AggregateProgramSkeleton {
-  override def main() = rep(Double.MaxValue)(d => mux[Double](sense1)(0.0)(minHoodPlus(nbr(d) + 1.0)))
+  def gradient(src: Boolean): Double = rep(Double.MaxValue)(d => mux[Double](src)(0.0)(minHoodPlus(nbr(d) + 1.0)))
+  override def main() = gradient(sense1)
 }
 object Demo15 extends Simulation[Main15]
 
@@ -149,3 +152,34 @@ class Main17 extends AggregateProgramSkeleton {
     foldhoodPlus(0)(_ + _)(nbr(boolToInt(sense1))).toDouble / foldhoodPlus(0)(_ + _)(nbr(1))
 }
 object Demo17 extends Simulation[Main17]
+
+/** Laboratory exercises */
+class Case9 extends AggregateProgramSkeleton {
+  override def main(): Integer =
+    branch[Integer](sense1)(rep(0)(_ + 1 min 1000000))(0)
+}
+
+object Demo18 extends Simulation[Case9]
+
+class Case12 extends AggregateProgramSkeleton {
+  override def main(): Set[ID] =
+    foldhoodPlus(Set[ID]())(_ ++ _)(Set(nbr(mid())))
+}
+
+object Demo19 extends Simulation[Case12]
+
+class Case8 extends AggregateProgramSkeleton {
+  override def main(): (ID, Double, ID) = {
+    val res = minHoodPlus((nbrRange(), nbr(mid())))
+    (mid(), res._1, res._2)
+  }
+}
+
+object Demo20 extends Simulation[Case8]
+
+class Case14 extends AggregateProgramSkeleton {
+  override def main(): ID =
+    rep(0)(x => mid() max maxHoodPlus(nbr(x)))
+}
+
+object Demo21 extends Simulation[Case14]
