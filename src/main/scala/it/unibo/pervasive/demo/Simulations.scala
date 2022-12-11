@@ -11,7 +11,10 @@ import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.configuration.{
 }
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.world.ScafiWorldInitializer.Random
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ScafiWorldIncarnation.EXPORT
-import it.unibo.scafi.simulation.s2.frontend.view.{ViewSetting, WindowConfiguration}
+import it.unibo.scafi.simulation.s2.frontend.view.{
+  ViewSetting,
+  WindowConfiguration
+}
 import it.unibo.pervasive.gui.RadiusLikeSimulation
 import it.unibo.scafi.space.graphics2D.BasicShape2D.Circle
 
@@ -22,17 +25,19 @@ import lab.demo.Incarnation._ //import all stuff from an incarnation
 
 class Simulation[R: ClassTag] extends App {
 
-  val formatter_evaluation: EXPORT_EVALUATION[Any] = (e: EXPORT) => formatter(e.root[Any]())
+  val formatter_evaluation: EXPORT_EVALUATION[Any] = (e: EXPORT) =>
+    formatter(e.root[Any]())
 
   val formatter: Any => Any = {
-    case (a, b) => (formatter(a), formatter(b))
+    case (a, b)    => (formatter(a), formatter(b))
     case (a, b, c) => (formatter(a), formatter(b), formatter(c))
-    case (a, b, c, d) => (formatter(a), formatter(b), formatter(c), formatter(d))
-    case l: Iterable[_] => l.map(formatter(_)).toString
-    case i: java.lang.Number if i.doubleValue() > 100000 => "Inf"
+    case (a, b, c, d) =>
+      (formatter(a), formatter(b), formatter(c), formatter(d))
+    case l: Iterable[_]                                   => l.map(formatter(_)).toString
+    case i: java.lang.Number if i.doubleValue() > 100000  => "Inf"
     case i: java.lang.Number if -i.doubleValue() > 100000 => "-Inf"
-    case i: java.lang.Double => f"${i.doubleValue()}%1.2f"
-    case x => x.toString
+    case i: java.lang.Double                              => f"${i.doubleValue()}%1.2f"
+    case x                                                => x.toString
   }
 
   val nodes = 100
@@ -42,14 +47,17 @@ class Simulation[R: ClassTag] extends App {
   ViewSetting.windowConfiguration = WindowConfiguration(width, height)
   ScafiProgramBuilder(
     Random(nodes, width, height),
-    SimulationInfo(implicitly[ClassTag[R]].runtimeClass, exportEvaluations = List(formatter_evaluation)),
+    SimulationInfo(implicitly[ClassTag[R]].runtimeClass,
+                   exportEvaluations = List(formatter_evaluation)),
     RadiusLikeSimulation(neighbourRange),
     ScafiWorldInformation(shape = Some(Circle(5, 5))),
     neighbourRender = true
   ).launch()
 }
 
-abstract class AggregateProgramSkeleton extends AggregateProgram with StandardSensors {
+abstract class AggregateProgramSkeleton
+    extends AggregateProgram
+    with StandardSensors {
   def sense1 = sense[Boolean]("sens1")
   def sense2 = sense[Boolean]("sens2")
   def sense3 = sense[Boolean]("sens3")
@@ -102,7 +110,10 @@ class Main9 extends AggregateProgramSkeleton {
 object Demo9 extends Simulation[Main9]
 
 class Main10 extends AggregateProgramSkeleton {
-  override def main() = rep(Math.random())(x => x)
+
+  def frozenField[T](t: T): T = rep(t)(x => x)
+
+  override def main() = frozenField(Math.random())
 }
 object Demo10 extends Simulation[Main10]
 
@@ -118,8 +129,8 @@ class Main12 extends AggregateProgramSkeleton {
 }
 object Demo12 extends Simulation[Main12]
 
-/** Counts the number of neighbors for each device, attention: we are using foldhoodPlus! It will exclude the device
-  * itself from the count
+/** Counts the number of neighbors for each device, attention: we are using foldhoodPlus
+  * It will exclude the device itself from the count
   */
 class Main13 extends AggregateProgramSkeleton {
   override def main() = foldhoodPlus(0)(_ + _)(nbr(1))
@@ -133,23 +144,28 @@ class Main14 extends AggregateProgramSkeleton {
 }
 object Demo14 extends Simulation[Main14]
 
-/** Mux is a sort of if with strictly evaluation (both the branch will be evaluated for sure). It computes the gradient
+/** Mux is a sort of "if" with strictly evaluation (both the branch will be evaluated for sure).
+  * It computes the gradient
   */
 class Main15 extends AggregateProgramSkeleton {
-  def gradient(src: Boolean): Double = rep(Double.MaxValue)(d => mux[Double](src)(0.0)(minHoodPlus(nbr(d) + 1.0)))
+  def gradient(src: Boolean): Double =
+    rep(Double.MaxValue)(d => mux[Double](src)(0.0)(minHoodPlus(nbr(d) + 1.0)))
   override def main() = gradient(sense1)
 }
 object Demo15 extends Simulation[Main15]
 
 class Main16 extends AggregateProgramSkeleton {
-  override def main() = rep(Double.MaxValue)(d => mux[Double](sense1)(0.0)(minHoodPlus(nbr(d) + nbrRange)))
+  override def main() =
+    rep(Double.MaxValue)(d =>
+      mux[Double](sense1)(0.0)(minHoodPlus(nbr(d) + nbrRange)))
 }
 object Demo16 extends Simulation[Main16]
 
 /** The percentage of neighbors that sense a true value */
 class Main17 extends AggregateProgramSkeleton {
   override def main() =
-    foldhoodPlus(0)(_ + _)(nbr(boolToInt(sense1))).toDouble / foldhoodPlus(0)(_ + _)(nbr(1))
+    foldhoodPlus(0)(_ + _)(nbr(boolToInt(sense1))).toDouble / foldhoodPlus(0)(
+      _ + _)(nbr(1))
 }
 object Demo17 extends Simulation[Main17]
 
@@ -179,7 +195,21 @@ object Demo20 extends Simulation[Case8]
 
 class Case14 extends AggregateProgramSkeleton {
   override def main(): ID =
-    rep(0)(x => mid() max maxHoodPlus(nbr(x)))
+    rep(0)(x => mid() max maxHoodPlus(nbr { x }))
 }
 
 object Demo21 extends Simulation[Case14]
+
+class Case16 extends AggregateProgramSkeleton {
+
+  def stretchedNbrRange(src: Boolean): Double = mux(src)(nbrRange * 5)(nbrRange)
+
+  def stretchedGradient(src: Boolean): Double =
+    rep(Double.MaxValue)(d =>
+      mux[Double](src)(0.0)(minHoodPlus(nbr(d) + stretchedNbrRange(sense2))))
+
+  override def main(): Double =
+    stretchedGradient(sense1)
+}
+
+object Demo22 extends Simulation[Case16]
